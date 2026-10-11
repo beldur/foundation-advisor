@@ -1,0 +1,22 @@
+{
+  "Allegeance": "userdata",
+  "Allegiance": "userdata",
+  "AssetGuid": "string",
+  "AssetName": "string",
+  "AssetPath": "string",
+  "BuyingResourceList": "userdata",
+  "CharacterSetup": "userdata",
+  "Description": "string",
+  "Heraldry": "userdata",
+  "ResourceNeededToUpgrade": "userdata",
+  "ResourceTradingReplenishDelay": "number",
+  "SellingResourceList": "userdata",
+  "TradeRouteUpgradeNarrativePanelTemplate": "userdata",
+  "UnlockableCostList": "userdata",
+  "UpgradeEventEnvoyProfile": "userdata",
+  "VillageName": "string",
+  "WorldGuiIcon": "userdata",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

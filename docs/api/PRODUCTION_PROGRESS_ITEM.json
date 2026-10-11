@@ -1,0 +1,7 @@
+{
+  "Value": "number",
+  "Villager": "userdata",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

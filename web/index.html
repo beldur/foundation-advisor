@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foundation companion</title>
+<style>
+  :root {
+    --bg: #f4f2ec; --panel: #ffffff; --line: #dedad0; --text: #23221e; --muted: #6f6c63;
+    --accent: #8a5a22; --ok: #3d7a45; --warn: #b5562b; --map: #e9e5d8;
+    --logistics: #6d6a8f; --production: #9a6b2f; --food: #5d8a3c; --housing: #a8553f; --other: #7b7b7b;
+    --villager: #1f5f8b; --idle: #c2702a; --visitor: #7a3fa0;
+    --berries: #b3266f; --stone: #5c5f66; --iron: #8a3b24; --fish: #e8f4ff; --deposit: #3a3a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17171a; --panel: #212125; --line: #34343a; --text: #e9e7e1; --muted: #9a978e;
+      --accent: #d6a15c; --ok: #7cc084; --warn: #e58a5e; --map: #1c1d1c;
+      --logistics: #9c98c9; --production: #d2a063; --food: #94c26f; --housing: #d98a75; --other: #a5a5a5;
+      --villager: #9fd4f7; --idle: #ffb168; --visitor: #d3a2f0;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, "Segoe UI", sans-serif; display: flex; flex-direction: column; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 22px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: 16px; margin: 0; font-weight: 650; }
+  .stat { color: var(--muted); }
+  .stat b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+  #connection::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--warn); }
+  #connection.live::before { background: var(--ok); }
+  main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(280px, 360px) 1fr; }
+  aside { overflow-y: auto; padding: 14px 16px 30px; border-right: 1px solid var(--line); }
+  section { margin-bottom: 20px; }
+  h2 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 3px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 10px; }
+  td.sub { color: var(--muted); }
+  .empty { color: var(--muted); }
+  .bad { color: var(--warn); }
+  #map-wrap { position: relative; min-height: 320px; background: var(--map); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+  canvas.dragging { cursor: grabbing; }
+  #legend { position: absolute; left: 12px; bottom: 10px; right: 12px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--text); pointer-events: none; }
+  #legend span { background: color-mix(in srgb, var(--panel) 82%, transparent); padding: 1px 6px; border-radius: 3px; }
+  #legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; }
+  #legend i.dot { border-radius: 50%; }
+  #advisor form { display: flex; gap: 6px; margin-bottom: 8px; }
+  #advisor input { flex: 1; min-width: 0; font: inherit; padding: 5px 8px; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 4px; }
+  #advisor button { font: inherit; padding: 5px 10px; background: var(--accent); color: var(--bg); border: 0; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+  #advisor button:disabled { opacity: 0.55; cursor: progress; }
+  #advice-summary { margin: 0 0 8px; }
+  #advice-meta { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
+  .tip { border-left: 3px solid var(--line); padding: 2px 0 2px 9px; margin: 0 0 9px; }
+  .tip.high { border-color: var(--warn); }
+  .tip.medium { border-color: var(--accent); }
+  .tip b { display: block; }
+  .tip p { margin: 2px 0 0; }
+  .tip .why { color: var(--muted); }
+  #tip { position: absolute; display: none; padding: 5px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; font-size: 12px; pointer-events: none; white-space: nowrap; }
+  #controls { position: absolute; right: 12px; top: 10px; display: flex; gap: 8px; align-items: center; font-size: 12px; }
+  #controls > * { font: inherit; padding: 4px 10px; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+  #controls label { display: flex; align-items: center; gap: 6px; }
+  #controls input { margin: 0; }
+  canvas.following { cursor: default; }
+  @media (max-width: 760px) {
+    main { grid-template-columns: 1fr; grid-template-rows: 45vh auto; }
+    #map-wrap { order: -1; }
+    aside { border-right: 0; border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">Foundation companion</h1>
+  <span id="connection" class="stat">Waiting for the game</span>
+  <span class="stat">Day <b id="day">–</b></span>
+  <span class="stat">Speed <b id="speed">–</b></span>
+  <span class="stat">Villagers <b id="population">–</b></span>
+  <span class="stat">Without a job <b id="jobless">–</b></span>
+  <span class="stat">Next newcomers <b id="immigration">–</b></span>
+  <span class="stat">Happiness <b id="happiness">–</b></span>
+  <span class="stat">Needs met <b id="needs-met">–</b></span>
+  <span class="stat">Homeless <b id="homeless">–</b></span>
+  <span class="stat">Splendor <b id="splendor">–</b></span>
+  <span class="stat">Tool <b id="tool">–</b></span>
+</header>
+<main>
+  <aside>
+    <section id="advisor">
+      <h2>Advisor</h2>
+      <form id="advisor-form">
+        <input id="advisor-question" type="text" placeholder="Ask something, or leave empty" aria-label="Question for the advisor">
+        <button id="advisor-ask" type="submit">Ask the advisor</button>
+      </form>
+      <p id="advice-summary" class="empty">Nothing asked yet.</p>
+      <div id="advice-tips"></div>
+      <p id="advice-meta"></p>
+    </section>
+    <section><h2>The game is warning about</h2><table id="notifications"></table></section>
+    <section><h2>Building problems</h2><table id="problems"></table></section>
+    <section><h2>Unmet needs</h2><table id="needs"></table></section>
+    <section><h2>What affects happiness</h2><table id="factors"></table></section>
+    <section><h2>Money this week</h2><table id="money"></table></section>
+    <section><h2>Taxes</h2><table id="taxes"></table></section>
+    <section><h2>Housing</h2><table id="housing"></table></section>
+    <section><h2>Production and use this week</h2><table id="flows"></table></section>
+    <section><h2>Resources in storage</h2><table id="resources"></table></section>
+    <section><h2>Jobs</h2><table id="jobs"></table></section>
+    <section><h2>What villagers are doing</h2><table id="states"></table></section>
+    <section><h2>Recent events</h2><table id="events"></table></section>
+    <section><h2>Buildings</h2><table id="buildings"></table></section>
+    <section><h2>Trade routes</h2><table id="trade"></table></section>
+    <section><h2>Visitors</h2><table id="visitors"></table></section>
+    <section><h2>Quests</h2><table id="quests"></table></section>
+    <section><h2>Progress</h2><table id="progress"></table></section>
+    <section><h2>Estates</h2><table id="estates"></table></section>
+    <section><h2>Natural resources on the map</h2><table id="deposits"></table></section>
+    <section id="errors-section" hidden><h2>Could not read</h2><table id="errors"></table></section>
+  </aside>
+  <div id="map-wrap">
+    <canvas id="map"></canvas>
+    <div id="controls">
+      <label title="Turn and move the map with the camera in the game"><input id="follow" type="checkbox">Follow game camera</label>
+      <button id="fit" type="button">Fit village</button>
+    </div>
+    <div id="legend">
+      <span><i style="background:var(--logistics)"></i>Logistics</span>
+      <span><i style="background:var(--production)"></i>Production</span>
+      <span><i style="background:var(--food)"></i>Food</span>
+      <span><i style="background:var(--housing)"></i>Housing</span>
+      <span><i style="background:var(--other)"></i>Other</span>
+      <span><i class="dot" style="background:var(--villager)"></i>Villager</span>
+      <span><i class="dot" style="background:var(--idle)"></i>No job</span>
+      <span><i class="dot" style="background:var(--visitor)"></i>Visitor</span>
+      <span><i class="dot" style="background:var(--berries)"></i>Berries</span>
+      <span><i style="background:var(--stone)"></i>Stone</span>
+      <span><i style="background:var(--iron)"></i>Iron ore</span>
+      <span><i class="dot" style="background:var(--fish);outline:1px solid #2c5f86"></i>Fish</span>
+    </div>
+    <div id="tip"></div>
+  </div>
+</main>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const label = (name) => String(name ?? "").replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase());
+
+let state = null;
+let eventLog = [];        // what changed in the village, newest last
+let terrain = null;       // latest survey from the game
+let terrainImage = null;  // the survey painted onto a canvas, one pixel per cell
+
+function rows(table, entries, emptyText) {
+  table.replaceChildren();
+  if (!entries.length) {
+    const cell = table.insertRow().insertCell();
+    cell.className = "empty";
+    cell.textContent = emptyText;
+    return;
+  }
+  for (const [name, value, note, hint] of entries) {
+    const row = table.insertRow();
+    if (hint) row.title = hint;
+    row.insertCell().textContent = name;
+    if (note !== undefined) {
+      const sub = row.insertCell();
+      sub.className = "n sub";
+      sub.textContent = note;
+    }
+    const number = row.insertCell();
+    number.className = "n";
+    number.textContent = value;
+  }
+}
+
+let workplaceByBuilding = new Map();
+
+const signed = (value) => `${value > 0 ? "+" : ""}${Math.round(value * 10) / 10}`;
+const villagerHappiness = (villager) => (villager.happiness ?? []).reduce((sum, factor) => sum + (factor.value ?? 0), 0);
+
+// Panels built from state the game normally hides from mods: needs, happiness,
+// building warnings and the budget. When the bridge cannot read them, the
+// fields are missing and the panels say so.
+function renderHidden({ village, villagers = [], buildings = [], workplaces = [], economy, scores, houses, notifications, taxes, resources, unlockables, estates, territory, edicts }) {
+  $("needs-met").textContent = village?.needsFilledPercent === undefined ? "–" : `${Math.round(village.needsFilledPercent)}%`;
+  $("tool").textContent = village?.tool ?? "–";
+
+  const housed = new Set((houses ?? []).flatMap((house) => house.residents));
+  $("homeless").textContent = houses ? villagers.filter((villager) => !housed.has(villager.id)).length : "–";
+  const DENSITY = ["low", "medium", "high"];
+  const byDensity = new Map();
+  for (const house of houses ?? []) {
+    const key = `${DENSITY[house.density] ?? house.density} density, status ${house.status + 1}`;
+    const entry = byDensity.get(key) ?? { houses: 0, residents: 0, ready: 0 };
+    entry.houses += 1;
+    entry.residents += house.residents.length;
+    entry.ready += house.readyForUpgrade || house.readyForStatusUpgrade ? 1 : 0;
+    byDensity.set(key, entry);
+  }
+  rows($("housing"), [...byDensity].map(([key, entry]) =>
+    [`${entry.houses} house${entry.houses === 1 ? "" : "s"}, ${key}`, `${entry.residents} residents`, entry.ready ? `${entry.ready} ready to upgrade` : ""]),
+    houses ? "No houses" : "Not available");
+
+  rows($("notifications"), (notifications ?? []).map((notification) =>
+    [label(notification.title ?? "?"), notification.targets > 1 ? notification.targets : "", label(notification.category).toLowerCase()]),
+    notifications ? "Nothing" : "Not available");
+
+  rows($("taxes"), (taxes ?? []).filter((tax) => !/COMPANION_BRIDGE/.test(tax.name ?? "")).map((tax) =>
+    [label(tax.name ?? "?"), tax.active ? (tax.bracket === undefined ? "on" : `bracket ${tax.bracket + 1}`) : "off"]),
+    taxes ? "None" : "Not available");
+
+  // Only resources that moved this week.
+  const flows = Object.entries(resources ?? {}).filter(([, r]) => r.produced || r.consumed || r.traded)
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([name, r]) => [label(name), `${r.produced ? `+${Math.round(r.produced)}` : ""} ${r.consumed ? `−${Math.round(r.consumed)}` : ""}`.trim(), r.traded ? `${Math.round(r.traded)} traded` : ""]);
+  rows($("flows"), flows, resources ? "Nothing yet this week" : "Not available");
+
+  rows($("estates"), (estates ?? []).map((estate) =>
+    [label((estate.name ?? "?").replace(/^Estate/, "")), `influence ${Math.round(estate.influence)}`, `splendor ${Math.round(estate.splendor)}`]),
+    estates ? "None" : "Not available");
+
+  const bought = (unlockables ?? []).filter((unlockable) => unlockable.bought > 0);
+  const progress = [];
+  if (village?.level !== undefined) progress.push(["Village level", village.level]);
+  if (territory) progress.push(["Regions owned", territory.owned.length]);
+  if (edicts) progress.push(["Edict slots", edicts.edictSlots], ["Privilege slots", edicts.privilegeSlots]);
+  if (unlockables) progress.push(["Unlocked", bought.length, `of ${unlockables.length}`, bought.map((unlockable) => label(unlockable.name)).join(", ")]);
+  rows($("progress"), progress, "Nothing to show");
+
+  $("title").textContent = village?.name ? `${village.name}` : "Foundation companion";
+  document.title = village?.name ? `${village.name} · Foundation companion` : "Foundation companion";
+  $("splendor").textContent = scores?.splendor === undefined ? "–" : Math.round(scores.splendor);
+
+  const known = villagers.filter((villager) => villager.happiness);
+  $("happiness").textContent = village?.happiness !== undefined
+    ? `${Math.round(village.happiness)}${village.leaveBelowHappiness !== undefined ? ` (leave below ${village.leaveBelowHappiness})` : ""}`
+    : known.length ? signed(known.reduce((sum, villager) => sum + villagerHappiness(villager), 0) / known.length) : "–";
+
+  // Warnings, most widespread first, with the buildings affected in the hover text.
+  const problems = new Map();
+  const note = (problem, building) => problems.set(problem, [...(problems.get(problem) ?? []), label(building)]);
+  const buildingName = new Map(buildings.map((building) => [building.id, building.customName || building.name]));
+  const quiet = new Set(["WORKPLACE_WORKING", "NONE", "PART_UNDER_CONSTRUCTION", "PART_BEING_PLACED"]);
+  for (const building of buildings) for (const status of building.status ?? []) if (!quiet.has(status)) note(status, building.customName || building.name);
+  for (const workplace of workplaces) {
+    for (const resource of workplace.lacking ?? []) note(`LACKS_${resource}`, buildingName.get(workplace.building) ?? workplace.name);
+  }
+  rows($("problems"), [...problems].sort((a, b) => b[1].length - a[1].length).map(([problem, where]) =>
+    [label(problem.replace(/^WORKPLACE_/, "")), where.length, undefined, where.join("\n")]),
+    buildings.some((building) => building.status) ? "None" : "Not available");
+
+  // Needs nobody has met, by need, with the villagers affected.
+  const unmet = new Map();
+  for (const villager of villagers) {
+    for (const need of villager.needs ?? []) {
+      if (need.lacking) unmet.set(need.need ?? "?", [...(unmet.get(need.need ?? "?") ?? []), villager.name]);
+    }
+  }
+  rows($("needs"), [...unmet].sort((a, b) => b[1].length - a[1].length).map(([need, who]) =>
+    [label(need), `${who.length} of ${villagers.length}`, undefined, who.join(", ")]),
+    known.length || villagers.some((villager) => villager.needs) ? "All met" : "Not available");
+
+  // Happiness factors summed over the village: what helps and what hurts overall.
+  const factors = new Map();
+  for (const villager of villagers) {
+    for (const factor of villager.happiness ?? []) {
+      if (!factor.value) continue;
+      const entry = factors.get(factor.factor) ?? { total: 0, count: 0 };
+      entry.total += factor.value;
+      entry.count += 1;
+      factors.set(factor.factor, entry);
+    }
+  }
+  rows($("factors"), [...factors].sort((a, b) => a[1].total - b[1].total).map(([factor, { total, count }]) =>
+    [label((factor ?? "?").replace(/^(HAPPINESS_)?FACTOR_/, "")), signed(total / count), `${count} villager${count === 1 ? "" : "s"}`]),
+    known.length ? "Nothing in particular" : "Not available");
+
+  // Income and expenses of the current week, per category, in gold coins where that is what moved.
+  const week = economy?.weeks?.at(-1);
+  const money = [];
+  const describe = (resources) => Object.entries(resources).map(([name, n]) => name === "GOLD_COINS" ? `${Math.round(n)}` : `${Math.round(n)} ${label(name).toLowerCase()}`).join(", ");
+  for (const [category, resources] of Object.entries(week?.income ?? {})) money.push([`${label(category)}`, `+${describe(resources)}`]);
+  for (const [category, resources] of Object.entries(week?.expenses ?? {})) money.push([`${label(category)}`, `−${describe(resources)}`]);
+  rows($("money"), money, economy ? "Nothing yet this week" : "Not available");
+}
+
+function renderEvents() {
+  const recent = eventLog.filter((event) => event.kind !== "new-day").slice(-12).reverse();
+  rows($("events"), recent.map((event) => [event.text, event.day === undefined ? "" : `day ${event.day}`]), "Nothing yet");
+}
+
+function count(items, key) {
+  const totals = new Map();
+  for (const item of items) totals.set(key(item), (totals.get(key(item)) ?? 0) + 1);
+  return [...totals].sort((a, b) => b[1] - a[1]);
+}
+
+function render() {
+  const { time, villagers = [], buildings = [], depots = [], visitors = [], quests = [], tradeRoutes = [], workplaces = [], edicts, immigration, errors = [] } = state;
+  const list = (names) => names.map(label).join(", ") || "nothing";
+  rows($("trade"), [...tradeRoutes].sort((a, b) => b.open - a.open || a.name.localeCompare(b.name)).map((route) =>
+    [label(route.name), route.open ? "open" : "closed", undefined, `Buys from you: ${list(route.buys)}\nSells to you: ${list(route.sells)}`]), "None");
+  renderHidden(state);
+  // Per building: who works there and what is waiting to be collected, for the map's hover text.
+  workplaceByBuilding = new Map(workplaces.map((workplace) => [workplace.building, workplace]));
+  $("immigration").textContent = !immigration ? "–" : !immigration.enabled ? "paused" : immigration.daysUntilNext <= 0 ? "today" : `in ${immigration.daysUntilNext} day${immigration.daysUntilNext === 1 ? "" : "s"}`;
+  rows($("visitors"), visitors.map((v) => [v.name || "Visitor", v.leaving ? "leaving" : v.arrived ? "here" : "on the way", label(v.purpose)]), "None");
+  rows($("quests"), quests.map((q) => [label(q.name ?? "Quest"), label(q.state ?? "")]), "None");
+  $("day").textContent = time ? time.day : "–";
+  $("speed").textContent = time ? `${time.timeScale}×` : "–";
+  $("population").textContent = villagers.length;
+  $("jobless").textContent = villagers.filter((v) => !v.job).length;
+
+  // Totals per resource, and where each is held, for the row's hover text.
+  const buildingNames = new Map(buildings.map((b) => [b.id, label(b.name)]));
+  const stock = new Map(), held = new Map();
+  for (const depot of depots) {
+    const place = buildingNames.get(depot.building) ?? label(depot.name);
+    for (const side of [depot.input, depot.output]) {
+      for (const [resource, quantity] of Object.entries(side ?? {})) {
+        stock.set(resource, (stock.get(resource) ?? 0) + quantity);
+        const places = held.get(resource) ?? held.set(resource, new Map()).get(resource);
+        places.set(place, (places.get(place) ?? 0) + quantity);
+      }
+    }
+  }
+  rows($("resources"), [...stock].sort((a, b) => a[0].localeCompare(b[0])).map(([name, quantity]) => {
+    const places = [...held.get(name)].sort((a, b) => b[1] - a[1]).map(([place, n]) => `${place}: ${n}`);
+    return [label(name), quantity >= 1e9 ? "unlimited" : quantity, undefined, places.join("\n")];
+  }), "Nothing stored");
+  rows($("jobs"), count(villagers, (v) => v.job ?? "No job").map(([name, n]) => [label(name), n]), "No villagers");
+  rows($("states"), count(villagers, (v) => v.state).map(([name, n]) => [label(name), n]), "No villagers");
+  rows($("buildings"), count(buildings, (b) => b.name).map(([name, n]) => {
+    const unfinished = buildings.filter((b) => b.name === name && b.partsBuilt < b.parts).length;
+    return [label(name), n, unfinished ? `${unfinished} under construction` : ""];
+  }), "No buildings");
+
+  $("errors-section").hidden = errors.length === 0;
+  rows($("errors"), errors.map((error) => [error, ""]), "");
+  draw();
+}
+
+// ---- Map: world x runs right and world z runs up, which matches the game's
+// default camera (measured with level:worldToScreenCoordinates). Height (y) is ignored.
+const canvas = $("map");
+const context = canvas.getContext("2d");
+// rotation is the direction of world +x on screen, in radians, with y down.
+const view = { x: 0, z: 0, scale: 1, rotation: 0, fitted: false };
+let camera = null;
+let following = false;
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const typeColour = (type) => css({ LOGISTICS: "--logistics", RESOURCE_PRODUCTION: "--production", GOODS_PRODUCTION: "--production", FOOD_PRODUCTION: "--food", HOUSING: "--housing" }[type] ?? "--other");
+function toScreen(x, z) {
+  const dx = (x - view.x) * view.scale, dz = (z - view.z) * view.scale;
+  const cos = Math.cos(view.rotation), sin = Math.sin(view.rotation);
+  return [dx * cos + dz * sin + canvas.clientWidth / 2, dx * sin - dz * cos + canvas.clientHeight / 2];
+}
+
+// Shows what the game shows: same centre, same rotation, roughly the same area.
+function applyCamera() {
+  if (!following || !camera) return;
+  view.x = camera.x;
+  view.z = camera.z;
+  view.rotation = camera.rotation;
+  view.scale = camera.pixelsPerUnit * canvas.clientWidth / camera.width;
+  view.fitted = true;
+}
+
+function setFollowing(on) {
+  following = on;
+  $("follow").checked = on;
+  canvas.classList.toggle("following", on);
+  try { localStorage.setItem("followCamera", on ? "1" : ""); } catch {}
+  if (on) applyCamera();
+  else view.rotation = 0;
+  draw();
+}
+
+const DEPOSIT_NAMES = { BERRIES: "Berry bushes", STONES: "Stone deposits", IRON_ORE: "Iron ore deposits", FISH: "Fishing spots", BOAR: "Boar" };
+const DEPOSIT_SINGULAR = { BERRIES: "Berry bush", STONES: "Stone deposit", IRON_ORE: "Iron ore deposit", FISH: "Fishing spot" };
+
+function renderTerrainPanel() {
+  const stride = terrain?.depositStride ?? 2;
+  const entries = Object.entries(terrain?.deposits ?? {}).map(([name, points]) => {
+    // With quantities known, show what is left across all deposits of the kind.
+    let left = 0;
+    for (let i = 2; stride === 3 && i < points.length; i += 3) left += Math.max(0, points[i]);
+    return [DEPOSIT_NAMES[name] ?? label(name), points.length / stride, stride === 3 && points[2] >= 0 ? `${left} left` : undefined];
+  });
+  if (terrain) entries.push(["Trees", terrain.treeCount]);
+  rows($("deposits"), entries.sort((a, b) => a[0].localeCompare(b[0])), "Not surveyed yet");
+}
+
+// Paints the survey once: land shaded by height and slope, water by depth,
+// forest darker where trees are denser.
+function paintTerrain() {
+  const { cells, heights, water, trees } = terrain;
+  const image = new ImageData(cells, cells);
+  let low = Infinity, high = -Infinity;
+  for (let i = 0; i < heights.length; i++) {
+    if (water[i]) continue;
+    if (heights[i] < low) low = heights[i];
+    if (heights[i] > high) high = heights[i];
+  }
+  const range = Math.max(1, high - low);
+  const at = (column, row) => heights[Math.min(cells - 1, Math.max(0, row)) * cells + Math.min(cells - 1, Math.max(0, column))];
+  for (let row = 0; row < cells; row++) {
+    for (let column = 0; column < cells; column++) {
+      const i = row * cells + column;
+      let r, g, b;
+      if (water[i]) {
+        const depth = Math.min(1, water[i] / 60);
+        r = 104 - 50 * depth; g = 158 - 55 * depth; b = 190 - 40 * depth;
+      } else {
+        const t = (heights[i] - low) / range;
+        r = 164 + 44 * t; g = 180 + 6 * t; b = 122 + 36 * t;
+        const forest = Math.min(0.8, trees[i] * 0.3);
+        r += (62 - r) * forest; g += (104 - g) * forest; b += (58 - b) * forest;
+        // Light from the upper left: slopes facing it are brighter.
+        const slope = (at(column - 1, row) - at(column + 1, row)) + (at(column, row + 1) - at(column, row - 1));
+        const shade = 1 + Math.max(-0.28, Math.min(0.28, slope * 0.012));
+        r *= shade; g *= shade; b *= shade;
+      }
+      image.data[i * 4] = r;
+      image.data[i * 4 + 1] = g;
+      image.data[i * 4 + 2] = b;
+      image.data[i * 4 + 3] = 255;
+    }
+  }
+  terrainImage = document.createElement("canvas");
+  terrainImage.width = terrainImage.height = cells;
+  terrainImage.getContext("2d").putImageData(image, 0, 0);
+}
+
+function fit() {
+  const points = [...(state?.buildings ?? []), ...(state?.villagers ?? [])];
+  if (!points.length) return;
+  const xs = points.map((p) => p.x), zs = points.map((p) => p.z);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minZ = Math.min(...zs), maxZ = Math.max(...zs);
+  view.x = (minX + maxX) / 2;
+  view.z = (minZ + maxZ) / 2;
+  view.scale = Math.min(canvas.clientWidth / (maxX - minX + 40), canvas.clientHeight / (maxZ - minZ + 40), 12);
+  view.fitted = true;
+}
+
+function draw() {
+  const ratio = window.devicePixelRatio || 1;
+  const width = canvas.clientWidth, height = canvas.clientHeight;
+  if (canvas.width !== width * ratio || canvas.height !== height * ratio) {
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+  }
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  context.clearRect(0, 0, width, height);
+  if (!state) return;
+  if (!view.fitted) fit();
+
+  if (terrain && terrainImage) {
+    // One image pixel is one cell; this transform is toScreen() for cell coordinates.
+    const size = view.scale * terrain.cell;
+    const cos = Math.cos(view.rotation), sin = Math.sin(view.rotation);
+    const [originX, originY] = toScreen(terrain.x, terrain.z);
+    context.setTransform(ratio * size * cos, ratio * size * sin, ratio * size * sin, -ratio * size * cos, ratio * originX, ratio * originY);
+    context.imageSmoothingEnabled = true;
+    context.drawImage(terrainImage, 0, 0);
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+    const marks = { BERRIES: ["--berries", "dot", 1.6], STONES: ["--stone", "square", 3], IRON_ORE: ["--iron", "square", 3], FISH: ["--fish", "ring", 3] };
+    for (const [name, points] of Object.entries(terrain.deposits)) {
+      if (name === "BOAR") continue;  // animals; they wander
+      // Anything else is a crop in a farm field: there are hundreds, so they are drawn small and pale.
+      const [colour, shape, base] = marks[name] ?? ["--food", "crop", 1.1];
+      const radius = base * Math.max(1, Math.min(2.5, view.scale / 2));
+      context.globalAlpha = shape === "crop" ? 0.55 : 1;
+      context.fillStyle = css(colour);
+      context.strokeStyle = "#2c5f86";
+      for (let i = 0; i < points.length; i += (terrain.depositStride ?? 2)) {
+        const [sx, sy] = toScreen(points[i], points[i + 1]);
+        if (sx < -10 || sy < -10 || sx > width + 10 || sy > height + 10) continue;
+        if (shape === "square") {
+          context.fillRect(sx - radius, sy - radius, radius * 2, radius * 2);
+        } else {
+          context.beginPath();
+          context.arc(sx, sy, radius, 0, Math.PI * 2);
+          context.fill();
+          if (shape === "ring") context.stroke();
+        }
+      }
+      context.globalAlpha = 1;
+    }
+  }
+
+  // Region borders: the village's own land strongly, the rest faintly.
+  if (terrain?.regions) {
+    const owned = new Set(state.territory?.owned ?? []);
+    const outline = (points) => {
+      context.beginPath();
+      for (let i = 0; i < points.length; i += 2) {
+        const [sx, sy] = toScreen(points[i], points[i + 1]);
+        if (i === 0) context.moveTo(sx, sy);
+        else context.lineTo(sx, sy);
+      }
+      context.closePath();
+    };
+    context.lineJoin = "round";
+    for (const [name, points] of Object.entries(terrain.regions)) {
+      if (owned.has(name)) continue;
+      outline(points);
+      context.strokeStyle = "rgba(40, 40, 40, 0.22)";
+      context.lineWidth = 1;
+      context.stroke();
+    }
+    for (const [name, points] of Object.entries(terrain.regions)) {
+      if (!owned.has(name)) continue;
+      outline(points);
+      context.fillStyle = "rgba(255, 255, 255, 0.10)";
+      context.fill();
+      context.strokeStyle = "rgba(250, 240, 200, 0.95)";
+      context.lineWidth = 2;
+      context.stroke();
+    }
+    context.lineWidth = 1;
+  }
+
+  // Grid every 50 world units, for a sense of distance. Lines are drawn between
+  // world points so that they turn with the map.
+  context.globalAlpha = terrainImage ? 0.25 : 1;
+  context.strokeStyle = css("--line");
+  context.lineWidth = 1;
+  const step = 50;
+  const reach = Math.hypot(width, height) / 2 / view.scale;
+  const line = (x1, z1, x2, z2) => {
+    context.moveTo(...toScreen(x1, z1));
+    context.lineTo(...toScreen(x2, z2));
+  };
+  context.beginPath();
+  for (let x = Math.ceil((view.x - reach) / step) * step; x <= view.x + reach; x += step) line(x, view.z - reach, x, view.z + reach);
+  for (let z = Math.ceil((view.z - reach) / step) * step; z <= view.z + reach; z += step) line(view.x - reach, z, view.x + reach, z);
+  context.stroke();
+  context.globalAlpha = 1;
+
+  // House lots, under the houses themselves.
+  context.fillStyle = css("--housing");
+  context.strokeStyle = "rgba(20, 20, 20, 0.6)";
+  for (const house of state.houses ?? []) {
+    if (house.lot.length < 6) continue;
+    context.globalAlpha = 0.45;
+    context.beginPath();
+    for (let i = 0; i < house.lot.length; i += 2) {
+      const [sx, sy] = toScreen(house.lot[i], house.lot[i + 1]);
+      if (i === 0) context.moveTo(sx, sy);
+      else context.lineTo(sx, sy);
+    }
+    context.closePath();
+    context.fill();
+    context.globalAlpha = 1;
+    context.stroke();
+  }
+
+  // Buildings: their ground outlines where the game gives them, and always a
+  // marker at the building's position so that small ones stay visible.
+  context.lineWidth = 1;
+  context.lineJoin = "round";
+  for (const building of state.buildings ?? []) {
+    const unfinished = building.partsBuilt < building.parts;
+    context.fillStyle = typeColour(building.type);
+    context.strokeStyle = "rgba(20, 20, 20, 0.75)";
+    context.globalAlpha = unfinished ? 0.45 : 0.9;
+    for (const outline of building.footprints ?? []) {
+      context.beginPath();
+      for (let i = 0; i < outline.length; i += 2) {
+        const [sx, sy] = toScreen(outline[i], outline[i + 1]);
+        if (i === 0) context.moveTo(sx, sy);
+        else context.lineTo(sx, sy);
+      }
+      context.closePath();
+      context.fill();
+      context.stroke();
+    }
+    const [sx, sy] = toScreen(building.x, building.z);
+    const size = building.type === "DECORATION" ? Math.max(3, 1.2 * view.scale) : Math.max(5, 2.2 * view.scale);
+    context.fillRect(sx - size / 2, sy - size / 2, size, size);
+    context.strokeRect(sx - size / 2, sy - size / 2, size, size);
+    context.globalAlpha = 1;
+  }
+
+  const dot = (item, colour) => {
+    const [sx, sy] = toScreen(item.x, item.z);
+    context.beginPath();
+    context.arc(sx, sy, 3.2, 0, Math.PI * 2);
+    context.fillStyle = css(colour);
+    context.fill();
+    context.strokeStyle = "rgba(20, 20, 20, 0.8)";
+    context.stroke();
+  };
+  for (const villager of state.villagers ?? []) dot(villager, villager.job ? "--villager" : "--idle");
+  for (const visitor of state.visitors ?? []) dot(visitor, "--visitor");
+
+  // Names last, with a halo so that they read over terrain.
+  if (view.scale > 1.6) {
+    context.font = "11px system-ui, sans-serif";
+    context.textAlign = "center";
+    context.lineWidth = 3;
+    context.strokeStyle = css("--panel");
+    context.fillStyle = css("--text");
+    for (const building of state.buildings ?? []) {
+      // Houses and decorations are too many to name; their colour and outline say enough.
+      if (building.type === "HOUSING" || building.type === "DECORATION") continue;
+      const [sx, sy] = toScreen(building.x, building.z);
+      const text = label(building.customName || building.name);
+      context.strokeText(text, sx, sy + 16);
+      context.fillText(text, sx, sy + 16);
+    }
+    context.lineWidth = 1;
+  }
+}
+
+// Pan by dragging, zoom with the wheel around the pointer.
+let drag = null;
+canvas.addEventListener("pointerdown", (event) => {
+  if (following) return;
+  drag = { x: event.clientX, y: event.clientY };
+  canvas.setPointerCapture(event.pointerId);
+  canvas.classList.add("dragging");
+});
+canvas.addEventListener("pointerup", () => { drag = null; canvas.classList.remove("dragging"); });
+canvas.addEventListener("pointermove", (event) => {
+  if (drag) {
+    view.x -= (event.clientX - drag.x) / view.scale;
+    view.z += (event.clientY - drag.y) / view.scale;
+    drag = { x: event.clientX, y: event.clientY };
+    draw();
+  }
+  hover(event);
+});
+canvas.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  if (following) return;
+  const box = canvas.getBoundingClientRect();
+  const px = event.clientX - box.left - box.width / 2, py = event.clientY - box.top - box.height / 2;
+  const factor = Math.exp(-event.deltaY * 0.0015);
+  const next = Math.min(40, Math.max(0.2, view.scale * factor));
+  view.x += px / view.scale - px / next;
+  view.z -= py / view.scale - py / next;
+  view.scale = next;
+  draw();
+}, { passive: false });
+canvas.addEventListener("pointerleave", () => { $("tip").style.display = "none"; });
+$("fit").addEventListener("click", () => { setFollowing(false); fit(); draw(); });
+$("follow").addEventListener("change", (event) => setFollowing(event.target.checked));
+window.addEventListener("resize", draw);
+
+function hover(event) {
+  const tip = $("tip");
+  if (!state || drag) { tip.style.display = "none"; return; }
+  const box = canvas.getBoundingClientRect();
+  const mx = event.clientX - box.left, my = event.clientY - box.top;
+  let best = null, bestDistance = 14;
+  const consider = (item, text, handicap = 0) => {
+    const [sx, sz] = toScreen(item.x, item.z);
+    const distance = Math.hypot(sx - mx, sz - my) + handicap;
+    if (distance < bestDistance) { best = text; bestDistance = distance; }
+  };
+  for (const b of state.buildings ?? []) {
+    const workplace = workplaceByBuilding.get(b.id);
+    const waiting = Object.entries(workplace?.waiting ?? {}).map(([name, n]) => `${n} ${label(name).toLowerCase()}`).join(", ");
+    const details = [
+      b.partsBuilt < b.parts ? "under construction" : "",
+      workplace ? `${workplace.workers.length} worker${workplace.workers.length === 1 ? "" : "s"}` : "",
+      workplace?.paused ? "paused" : "",
+      waiting ? `waiting for pickup: ${waiting}` : "",
+      ...(b.status ?? []).filter((status) => !["WORKPLACE_WORKING", "NONE"].includes(status)).map((status) => label(status.replace(/^WORKPLACE_/, "")).toLowerCase()),
+      ...(workplace?.lacking ?? []).map((resource) => `lacks ${label(resource).toLowerCase()}`),
+    ].filter(Boolean).join(", ");
+    const house = (state.houses ?? []).find((candidate) => candidate.building === b.id);
+    const residents = house ? `, ${house.residents.length} resident${house.residents.length === 1 ? "" : "s"}` : "";
+    consider(b, `${label(b.customName || b.name)}${residents}${details ? `: ${details}` : ""}`);
+  }
+  // Deposits get a handicap, so that a building or villager close by wins.
+  for (const [name, points] of Object.entries(terrain?.deposits ?? {})) {
+    if (name === "BOAR" || !(name in DEPOSIT_SINGULAR)) continue;
+    const full = terrain.depositQuantity?.[name];
+    const stride = terrain.depositStride ?? 2;
+    const kind = DEPOSIT_SINGULAR[name] ?? label(name);
+    for (let i = 0; i < points.length; i += stride) {
+      const left = stride === 3 ? points[i + 2] : -1;
+      const text = left >= 0 ? `${kind}: ${left} left${full > 1 ? ` of ${full}` : ""}` : `${kind}${full > 1 ? `, holds ${full} when untouched` : ""}`;
+      consider({ x: points[i], z: points[i + 1] }, text, 4);
+    }
+  }
+  for (const v of state.villagers ?? []) {
+    const unmet = (v.needs ?? []).filter((need) => need.lacking).map((need) => label(need.need).toLowerCase());
+    const mood = v.happiness ? `, happiness ${signed(villagerHappiness(v))}` : "";
+    const lacking = unmet.length ? `, needs ${unmet.join(", ")}` : "";
+    consider(v, `${v.name}: ${label(v.job ?? "no job")}${v.jobLevel ? ` level ${v.jobLevel}` : ""}, ${label(v.state).toLowerCase()}${mood}${lacking}`);
+  }
+  for (const v of state.visitors ?? []) consider(v, `${v.name || "Visitor"}: ${label(v.purpose ?? "visitor").toLowerCase()}`);
+  if (!best) { tip.style.display = "none"; return; }
+  tip.textContent = best;
+  tip.style.display = "block";
+  tip.style.left = `${Math.min(mx + 14, box.width - tip.offsetWidth - 6)}px`;
+  tip.style.top = `${my + 14}px`;
+}
+
+const events = new EventSource("/events");
+events.addEventListener("state", (event) => { state = JSON.parse(event.data); render(); });
+function renderAdvice(entry) {
+  $("advisor-ask").disabled = false;
+  $("advisor-ask").textContent = "Ask the advisor";
+  const summary = $("advice-summary"), tips = $("advice-tips");
+  tips.replaceChildren();
+  summary.className = entry.ok ? "" : "bad";
+  summary.textContent = entry.ok ? entry.advice.summary : entry.error;
+  for (const tip of entry.ok ? entry.advice.tips : []) {
+    const box = document.createElement("div");
+    box.className = `tip ${tip.priority}`;
+    const title = document.createElement("b");
+    title.textContent = tip.title;
+    const action = document.createElement("p");
+    action.textContent = tip.action;
+    const why = document.createElement("p");
+    why.className = "why";
+    why.textContent = tip.why;
+    box.append(title, action, why);
+    tips.append(box);
+  }
+  const asked = entry.question ? `Asked: "${entry.question}". ` : "";
+  $("advice-meta").textContent = `${asked}${new Date(entry.at).toLocaleTimeString()}${entry.ok ? `, ${entry.model}` : ""}`;
+}
+$("advisor-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  $("advisor-ask").disabled = true;
+  $("advisor-ask").textContent = "Thinking…";
+  try {
+    const response = await fetch("/advise", { method: "POST", body: JSON.stringify({ question: $("advisor-question").value }) });
+    renderAdvice(await response.json());
+  } catch {
+    renderAdvice({ ok: false, error: "The server did not answer.", at: new Date().toISOString() });
+  }
+});
+events.addEventListener("advice", (event) => renderAdvice(JSON.parse(event.data)));
+events.addEventListener("advising", () => { $("advisor-ask").disabled = true; $("advisor-ask").textContent = "Thinking…"; });
+events.addEventListener("events", (event) => { eventLog = JSON.parse(event.data); renderEvents(); });
+events.addEventListener("event", (event) => { eventLog.push(JSON.parse(event.data)); renderEvents(); });
+renderEvents();
+events.addEventListener("terrain", (event) => {
+  terrain = JSON.parse(event.data);
+  paintTerrain();
+  renderTerrainPanel();
+  draw();
+});
+renderTerrainPanel();
+events.addEventListener("camera", (event) => {
+  camera = JSON.parse(event.data);
+  if (following) { applyCamera(); draw(); }
+});
+try { if (localStorage.getItem("followCamera")) setFollowing(true); } catch {}
+events.addEventListener("connection", (event) => {
+  const { connected } = JSON.parse(event.data);
+  $("connection").classList.toggle("live", connected);
+  $("connection").textContent = connected ? "Connected to the game" : "Waiting for the game";
+});
+events.onerror = () => {
+  $("connection").classList.remove("live");
+  $("connection").textContent = "Server not reachable";
+};
+</script>
+</body>
+</html>

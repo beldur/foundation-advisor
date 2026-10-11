@@ -1,0 +1,14 @@
+{
+  "AssetGuid": "string",
+  "AssetName": "string",
+  "AssetPath": "string",
+  "BudgetCategoryList": "userdata",
+  "Image": "userdata",
+  "IsVolume": "boolean",
+  "Name": "string",
+  "ScoreValueFactor": "number",
+  "clone": "function",
+  "init": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

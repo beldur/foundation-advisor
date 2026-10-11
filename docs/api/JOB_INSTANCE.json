@@ -1,0 +1,14 @@
+{
+  "AssetJob": "userdata",
+  "CurrentLevel": "number",
+  "Experience": "number",
+  "IsActive": "boolean",
+  "Job": "userdata",
+  "ProductivityModifier": "number",
+  "ProgressionRequiredMultiplier": "number",
+  "ResJob": "userdata",
+  "Workplace": "userdata",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

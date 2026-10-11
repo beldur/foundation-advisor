@@ -1,0 +1,30 @@
+{
+  "name": "foundation-advisor",
+  "description": "Live dashboard and LLM advisor for the city-builder Foundation",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "server": "node --env-file-if-exists=.env server/src/main.ts",
+    "eval": "node server/src/eval.ts",
+    "install-bridge": "node server/src/install-bridge.ts",
+    "probe-api": "node server/src/probe-api.ts",
+    "dump-rules": "node server/src/dump-rules.ts",
+    "inspect": "node server/src/inspect.ts",
+    "screenshot": "node tools/screenshot.ts",
+    "summarize-rules": "node server/src/summarize-rules.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test server/test/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "fengari": "^0.1.4",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
+    "zod": "^4.6.6"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "AllowUnemployedVillager": "boolean",
+  "AssetGuid": "string",
+  "AssetName": "string",
+  "AssetPath": "string",
+  "AssignWorkplaceFunction": "userdata",
+  "Behavior": "userdata",
+  "CanHaveAPartner": "boolean",
+  "CharacterSetup": "userdata",
+  "IsDefinitive": "boolean",
+  "IsMergeVisitorNotification": "boolean",
+  "NavMeshUnlockCategoryList": "userdata",
+  "ProfileName": "string",
+  "ProfileNameGendered": "userdata",
+  "ProfileNamePlural": "string",
+  "ProfileNamePluralGendered": "userdata",
+  "StatusList": "userdata",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

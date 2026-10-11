@@ -1,0 +1,6 @@
+{
+	"Name": "Companion Bridge",
+	"Author": "foundation-advisor",
+	"Description": "Gets the companion bridge (moddev/bridge.lua) called every frame. Development tool; use on test saves only.",
+	"Version": "0.1.0"
+}

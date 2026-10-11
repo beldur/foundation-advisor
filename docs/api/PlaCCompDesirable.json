@@ -1,0 +1,23 @@
+{
+  "Config": "userdata",
+  "Data": "userdata",
+  "DesirabilityModifierList": "userdata",
+  "Enabled": "boolean",
+  "IsRegistered": "boolean",
+  "Modifiers": "userdata",
+  "getComponentType": "function",
+  "getLevel": "function",
+  "getOwner": "function",
+  "hasEnabledFlag": "function",
+  "init": "function",
+  "isEnabled": "function",
+  "isExactly": "function",
+  "isInitialized": "function",
+  "isPreInitialized": "function",
+  "isValid": "function",
+  "onDestroy": "function",
+  "onDisabled": "function",
+  "onEnabled": "function",
+  "onFinalize": "function",
+  "onOwnerChanged": "function"
+}

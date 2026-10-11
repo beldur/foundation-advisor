@@ -1,0 +1,12 @@
+node_modules/
+.env
+
+# Local tool settings and save backups
+.claude/
+backups/
+
+# Read out of the game by pnpm dump-rules, pnpm summarize-rules and pnpm inspect.
+# Regenerate them from your own copy of the game.
+docs/rules/
+docs/rules-summary.json
+docs/dumps/

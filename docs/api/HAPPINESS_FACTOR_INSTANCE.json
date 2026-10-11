@@ -1,0 +1,21 @@
+{
+  "Applicator": "userdata",
+  "AssetHappinessFactor": "userdata",
+  "DecayFromValue": "number",
+  "DecayTargetValue": "number",
+  "Descriptor": "userdata",
+  "HappinessFactor": "userdata",
+  "InternalValue": "number",
+  "IsDecayed": "boolean",
+  "IsMoving": "boolean",
+  "IsSolved": "boolean",
+  "Multiplier": "number",
+  "ProgressFromValue": "number",
+  "ProgressTargetValue": "number",
+  "ResHappinessFactor": "userdata",
+  "TimeBeforeDecaying": "number",
+  "TotalValue": "number",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

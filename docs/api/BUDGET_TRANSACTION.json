@@ -1,0 +1,12 @@
+{
+  "AssetTaxationFunction": "userdata",
+  "Category": "userdata",
+  "Collection": "userdata",
+  "CurrencyCollection": "userdata",
+  "ResTaxationFunction": "userdata",
+  "TaxationFunction": "userdata",
+  "VillagerStatusDetailsList": "userdata",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

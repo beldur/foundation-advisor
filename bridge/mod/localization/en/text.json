@@ -1,0 +1,12 @@
+{
+	"EVENTS": {
+		"COMPANION_BRIDGE_EVENT_TITLE": "Companion bridge",
+		"COMPANION_BRIDGE_EVENT_DESCRIPTION": "Daily wake-up call for the companion bridge. Does nothing in the game."
+	},
+	"TAXATION_FUNCTION": {
+		"COMPANION_BRIDGE_TAXATION_NAME": "Companion bridge",
+		"COMPANION_BRIDGE_TAXATION_DESCRIPTION": "Placeholder used by the companion bridge. Collects nothing.",
+		"COMPANION_BRIDGE_TAXATION_CATEGORY": "Companion bridge",
+		"COMPANION_BRIDGE_TAXATION_TAXED": "Companion bridge"
+	}
+}

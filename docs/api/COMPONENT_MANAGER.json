@@ -1,0 +1,19 @@
+{
+  "IsInitialized": "boolean",
+  "ON_COMPONENT_DESTROYED": "userdata",
+  "ON_COMPONENT_DISABLED": "userdata",
+  "ON_COMPONENT_ENABLED": "userdata",
+  "ON_COMPONENT_FINALIZED": "userdata",
+  "ON_COMPONENT_INITIALIZED": "userdata",
+  "clone": "function",
+  "getAllComponent": "function",
+  "getAllComponent_property": "userdata",
+  "getAllDisabledComponent": "function",
+  "getAllDisabledComponent_property": "userdata",
+  "getAllEnabledComponent": "function",
+  "getAllEnabledComponent_property": "userdata",
+  "getFirst": "function",
+  "getFirstEnabled": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

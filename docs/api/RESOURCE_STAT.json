@@ -1,0 +1,16 @@
+{
+  "AssetResource": "userdata",
+  "CostPerUnit": "number",
+  "HasBeenCalculated": "boolean",
+  "QuantityConsumed": "number",
+  "QuantityTraded": "number",
+  "ResResource": "userdata",
+  "Resource": "userdata",
+  "RevenuePerResourceTraded": "number",
+  "TradeRevenue": "number",
+  "UpkeepCostPerUnit": "number",
+  "WorkplaceStatList": "userdata",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

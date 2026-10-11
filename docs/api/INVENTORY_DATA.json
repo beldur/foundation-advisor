@@ -1,0 +1,8 @@
+{
+  "ClearResourceOnEmpty": "boolean",
+  "Collection": "userdata",
+  "ResourceUsage": "table",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

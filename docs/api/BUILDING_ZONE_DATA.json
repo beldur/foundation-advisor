@@ -1,0 +1,9 @@
+{
+  "GeneratedNavMeshZone": "userdata",
+  "GeneratedTreeCollidingZone": "userdata",
+  "TreeCollidingRadius": "number",
+  "ZoneEntryList": "userdata",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

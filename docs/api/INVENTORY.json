@@ -1,0 +1,23 @@
+{
+  "ClearResourceOnEmpty": "boolean",
+  "Enabled": "boolean",
+  "InfiniteResourceList": "userdata",
+  "Inventory": "userdata",
+  "ResourceUsage": "table",
+  "finalize": "function",
+  "getComponentType": "function",
+  "getLevel": "function",
+  "getOwner": "function",
+  "hasEnabledFlag": "function",
+  "init": "function",
+  "isEnabled": "function",
+  "isExactly": "function",
+  "isInitialized": "function",
+  "isPreInitialized": "function",
+  "isValid": "function",
+  "onDestroy": "function",
+  "onDisabled": "function",
+  "onEnabled": "function",
+  "onFinalize": "function",
+  "onOwnerChanged": "function"
+}

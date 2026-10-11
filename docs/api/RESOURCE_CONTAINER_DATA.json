@@ -1,0 +1,19 @@
+{
+  "AssetGuid": "string",
+  "AssetName": "string",
+  "AssetPath": "string",
+  "HasMaximumWorkstation": "boolean",
+  "InitialQuantity": "number",
+  "IsDestroyWhenEmpty": "boolean",
+  "IsDisplayWorldQuantity": "boolean",
+  "IsReplenishable": "boolean",
+  "IsUnlimited": "boolean",
+  "Radius": "number",
+  "ReplenishDurationInDays": "number",
+  "ReplenishQuantity": "number",
+  "ResourceData": "userdata",
+  "ResourceValue": "number",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

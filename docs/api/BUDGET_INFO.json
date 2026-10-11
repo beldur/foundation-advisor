@@ -1,0 +1,7 @@
+{
+  "ExpenseTransactionList": "userdata",
+  "IncomeTransactionList": "userdata",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}

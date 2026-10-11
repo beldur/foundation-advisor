@@ -1,0 +1,23 @@
+{
+  "AgentNeed": "userdata",
+  "AmountOfSameTypeRequiredToFillNeed": "number",
+  "AssetAgentNeed": "userdata",
+  "AssetVillagerNeed": "userdata",
+  "DelayBeforeApplyingHappinessFactor": "number",
+  "DelayBeforeNextFillnessTry": "number",
+  "IsNeedProviderListDirty": "boolean",
+  "IsShowNotification": "boolean",
+  "ResAgentNeed": "userdata",
+  "ResourceListConsumedForNeed": "userdata",
+  "ResourceReserved": "userdata",
+  "SearchPosition": "table",
+  "SelectedResource": "userdata",
+  "SelectedResourceDistance": "number",
+  "TimeBeforeApplyingHappinessFactor": "number",
+  "TimeLeftBeforeApplyingHappinessFactor": "number",
+  "TimeToNextConsumption": "number",
+  "WasFilled": "boolean",
+  "clone": "function",
+  "isExactly": "function",
+  "isValid": "function"
+}
